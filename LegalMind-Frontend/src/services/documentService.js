@@ -1,4 +1,6 @@
 import apiClient from './api';
+
+const AI_BASE_URL = import.meta.env.VITE_AI_BASE_URL || 'http://localhost:8000';
 import { mockDocumentsList } from '../data/documentsMockData';
 
 const LOCAL_DOCS_KEY = 'legalmind_local_documents';
@@ -228,12 +230,54 @@ export const deleteDocumentApi = async (id) => {
   }
 };
 
+/**
+ * Fetch Action Roadmap & Execution Playbook (DO, DO NOT, REMEMBER, NEXT STEPS)
+ */
+export const getContractRoadmapApi = async (documentId, contractText = '') => {
+  try {
+    const response = await fetch(`${AI_BASE_URL}/api/v1/rag/action-roadmap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: documentId, contract_text: contractText }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.doList) return data;
+    }
+  } catch (error) {
+    console.warn('[DocumentService] AI Service action-roadmap fetch error, using default playbook:', error.message);
+  }
+  return null;
+};
+
+/**
+ * Fetch One-Click Clause Rewrite (Protective, Balanced, Minimal Friction)
+ */
+export const rewriteClauseApi = async (originalClause, riskTopic = 'Contract Risk Mitigation') => {
+  try {
+    const response = await fetch(`${AI_BASE_URL}/api/v1/rag/rewrite-clause`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ original_clause: originalClause, risk_topic: riskTopic }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.rewrites) return data;
+    }
+  } catch (error) {
+    console.warn('[DocumentService] AI Service rewrite-clause error, using fallback:', error.message);
+  }
+  return null;
+};
+
 export default {
   getDocuments: getDocumentsApi,
   getDocumentsApi,
   getDashboardStatsApi,
   getDocumentByIdApi,
   getAnalysisByDocumentIdApi,
+  getContractRoadmapApi,
+  rewriteClauseApi,
   uploadDocumentApi,
   updateDocumentApi,
   toggleFavoriteApi,
